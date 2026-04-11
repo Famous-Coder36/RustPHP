@@ -2,9 +2,23 @@
 Rust engine for php
 
 ## Requirements
-•PHP 8.2+
+• PHP 8.2+
+• Rust
 
-•Rust
+## Composer
+```json
+{
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/Famous-Coder36/RustPHP.git"
+    }
+  ],
+  "require": {
+    "famouscoder/rustphp": "*"
+  }
+}
+```
 
 ## Install
 ```bash
