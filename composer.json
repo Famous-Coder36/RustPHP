@@ -1,5 +1,5 @@
 {
-  "name": "famouscoder/enginer",
+  "name": "famouscoder/rustphp",
   "description": "Rust PHP Extension",
   "version": "1.0.0",
   "type": "library",
