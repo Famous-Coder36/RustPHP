@@ -6,7 +6,7 @@ Rust engine for php
 composer require famouscoder/rustphp
 
 ## Usage
-php -d extension=./vendor/famouscoder/enginer/ext/libssalom.so test.php
+php -d extension=./vendor/famouscoder/rustphp/ext/libssalom.so test.php
 ```php
 <?php
 require "vendor/autoload.php";
