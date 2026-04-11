@@ -22,7 +22,31 @@
       "RustPHP\\": "src/"
     }
   },
+"scripts": {
+    "install-rust": [
+      "command -v cargo >/dev/null 2>&1 || (echo '📦 Rust topilmadi, o‘rnatilmoqda...' && pkg install rust -y || curl https://sh.rustup.rs -sSf | sh -s -- -y)"
+    ],
 
+    "check-rust": [
+      "command -v cargo >/dev/null 2>&1 || (echo '❌ Rust o‘rnatilmadi!' && exit 1)"
+    ],
+
+    "build-ext": [
+      "cargo build --manifest-path=vendor/famouscoder/rustphp/Cargo.toml"
+    ],
+
+    "post-install-cmd": [
+      "@install-rust",
+      "@check-rust",
+      "@build-ext"
+    ],
+
+    "post-update-cmd": [
+      "@install-rust",
+      "@check-rust",
+      "@build-ext"
+    ]
+  },
 "authors": [
     {
       "name": "Famous_Coder",
