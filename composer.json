@@ -1,1 +1,33 @@
+{
+  "name": "famouscoder/enginer",
+  "description": "Rust PHP Extension",
+  "version": "1.0.0",
+  "type": "library",
+  "license": "MIT",
 
+  "require": {
+    "php": ">=8.2"
+  },
+
+"minimum-stability": "dev",
+  "prefer-stable": true,
+
+  "extra": {
+    "branch-alias": {
+      "dev-main": "1.0-dev"
+    }
+  },
+
+  "autoload": {
+    "psr-4": {
+      "Engine\\": "src/"
+    }
+  },
+
+"authors": [
+    {
+      "name": "Famous_Coder",
+      "role": "developer"
+    }
+  ]
+}
