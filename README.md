@@ -6,6 +6,7 @@ Rust engine for php
 • Rust
 
 ## Composer
+composer.json:
 ```json
 {
   "repositories": [
