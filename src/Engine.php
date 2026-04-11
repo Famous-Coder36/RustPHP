@@ -1,8 +1,8 @@
 <?php
 
-namespace Engine;
+namespace RustPHP;
 
-class Engine extends RustEngine
+class Engine extends \RustEngine
 {
     public function __construct()
     {
