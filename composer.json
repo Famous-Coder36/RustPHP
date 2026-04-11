@@ -32,7 +32,7 @@
     ],
 
     "build-ext": [
-      "cargo build --manifest-path=vendor/famouscoder/rustphp/Cargo.toml"
+      "cargo build"
     ],
 
     "post-install-cmd": [
