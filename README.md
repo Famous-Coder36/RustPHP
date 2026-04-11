@@ -5,8 +5,10 @@ Rust engine for php
 
 composer require famouscoder/rustphp
 
+cargo build --manifest-path=vendor/famouscoder/rustphp/Cargo.toml
+
 ## Usage
-php -d extension=./vendor/famouscoder/rustphp/ext/libssalom.so test.php
+php -d extension=./vendor/famouscoder/rustphp/target/debug/libssalom.so test.php
 ```php
 <?php
 require "vendor/autoload.php";
