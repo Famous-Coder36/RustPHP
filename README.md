@@ -11,6 +11,7 @@ cargo build --manifest-path=vendor/famouscoder/rustphp/Cargo.toml
 ```bash
 php -d extension=./vendor/famouscoder/rustphp/target/debug/libssalom.so test.php
 ```
+test.php:
 ```php
 <?php
 require "vendor/autoload.php";
