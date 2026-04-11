@@ -2,10 +2,10 @@
 Rust engine for php
 
 ## Install
-
+```bash
 composer require famouscoder/rustphp
-
 cargo build --manifest-path=vendor/famouscoder/rustphp/Cargo.toml
+```
 
 ## Usage
 ```bash
