@@ -12,7 +12,7 @@ composer require famouscoder/rustphp
 cargo build --manifest-path=vendor/famouscoder/rustphp/Cargo.toml
 ```
 
-## Usage
+## Exemple
 
 test.php:
 ```php
@@ -24,6 +24,8 @@ use RustPHP\Engine;
 Engine::println("salom");
 
 ```
+
+## Usage
 
 ```bash
 php -d extension=./vendor/famouscoder/rustphp/target/debug/libssalom.so test.php
