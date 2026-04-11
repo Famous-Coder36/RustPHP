@@ -1,6 +1,10 @@
 # RustPHP
 Rust engine for php
 
+## Requirements
+•PHP 8.2+
+•Rust
+
 ## Install
 ```bash
 composer require famouscoder/rustphp
@@ -8,9 +12,7 @@ cargo build --manifest-path=vendor/famouscoder/rustphp/Cargo.toml
 ```
 
 ## Usage
-```bash
-php -d extension=./vendor/famouscoder/rustphp/target/debug/libssalom.so test.php
-```
+
 test.php:
 ```php
 <?php
@@ -20,4 +22,8 @@ use RustPHP\Engine;
 
 Engine::println("salom");
 
+```
+
+```bash
+php -d extension=./vendor/famouscoder/rustphp/target/debug/libssalom.so test.php
 ```
