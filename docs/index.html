@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RustPHP Engine</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0b0f19;
+      color: white;
+      text-align: center;
+    }
+
+    header {
+      padding: 70px 20px;
+      background: linear-gradient(120deg, #111827, #0f172a);
+    }
+
+    h1 {
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    .tag {
+      color: #38bdf8;
+      font-weight: bold;
+    }
+
+    p {
+      color: #cbd5e1;
+      font-size: 18px;
+    }
+
+    .btn {
+      margin-top: 20px;
+      display: inline-block;
+      padding: 12px 25px;
+      background: #22c55e;
+      color: black;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      background: #16a34a;
+    }
+
+    section {
+      padding: 40px 20px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.05);
+      padding: 20px;
+      margin: 15px auto;
+      max-width: 600px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #1e293b;
+      color: #38bdf8;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    footer {
+      margin-top: 40px;
+      padding: 20px;
+      color: #64748b;
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>🦀 RustPHP Engine</h1>
+  <p class="tag">Rust + PHP Hybrid Framework</p>
+  <p>High performance PHP engine powered by Rust core</p>
+
+  <a class="btn" href="https://github.com/Famous-Coder36/RustPHP">
+    View GitHub
+  </a>
+</header>
+
+<section>
+
+  <h2>⚡ Features</h2>
+
+  <div class="card">
+    <div class="badge">CORE</div>
+    <h3>Blazing Fast Engine</h3>
+    <p>Rust asosida yozilgan PHP execution engine</p>
+  </div>
+
+  <div class="card">
+    <div class="badge">EXTENSION</div>
+    <h3>PHP Extension Support</h3>
+    <p>.so module orqali PHP bilan integratsiya</p>
+  </div>
+
+  <div class="card">
+    <div class="badge">CLI</div>
+    <h3>Command Line Runner</h3>
+    <p>php -d extension=libssalom.so orqali ishlaydi</p>
+  </div>
+
+  <div class="card">
+    <div class="badge">FUTURE</div>
+    <h3>Framework Layer</h3>
+    <p>RustPHP framework (routing, crypto, api)</p>
+  </div>
+
+</section>
+
+<section>
+  <h2>🚀 Quick Start</h2>
+
+  <div class="card">
+    <p><b>Install:</b></p>
+    <code>composer require famouscoder/rustphp</code>
+  </div>
+
+  <div class="card">
+    <p><b>Run:</b></p>
+    <code>php -d extension=./target/debug/libssalom.so index.php</code>
+  </div>
+</section>
+
+<footer>
+  © 2026 RustPHP Engine | Built with Rust + PHP
+</footer>
+
+</body>
+</html>
