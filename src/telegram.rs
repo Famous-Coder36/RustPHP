@@ -3,9 +3,7 @@ use reqwest::blocking::Client;
 use std::collections::HashMap;
 use std::time::Duration;
 
-/// ==========================
-///  TELEGRAM BOT CLASS
-/// ==========================
+
 #[php_class]
 pub struct TelegramBot {
     token: String,
