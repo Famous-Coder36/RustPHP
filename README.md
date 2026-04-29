@@ -37,12 +37,12 @@ require "vendor/autoload.php";
 
 use RustPHP\Engine;
 
-Engine::println("salom");
+Engine::echoln("Hello from RustPHP");
 
 ```
 
 ## Usage
 
 ```bash
-php -d extension=./vendor/famouscoder/rustphp/target/debug/libssalom.so test.php
+php -d extension=./vendor/famouscoder/rustphp/target/debug/librustphp.so test.php
 ```
