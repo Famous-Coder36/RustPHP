@@ -37,19 +37,19 @@ impl HttpClient {
 
         match res.text() {
             Ok(t) => t,
-            Err(_) => "Xatolik: response o‘qilmadi".into(),
+            Err(_) => "Error: response is not read".into(),
         }
     }
     
     pub fn post(&self, url: String, data: HashMap<String, String>) -> String {
         let res = match self.client.post(&url).form(&data).send() {
             Ok(r) => r,
-            Err(_) => return "Xatolik: POST request failed".into(),
+            Err(_) => return "Error: POST request failed".into(),
         };
 
         match res.text() {
             Ok(t) => t,
-            Err(_) => "Xatolik: response o‘qilmadi".into(),
+            Err(_) => "Error: response o‘qilmadi".into(),
         }
     }
 
@@ -67,12 +67,12 @@ impl HttpClient {
 
         let res = match req.send() {
             Ok(r) => r,
-            Err(_) => return "Xatolik: header POST failed".into(),
+            Err(_) => return "Error: header POST failed".into(),
         };
 
         match res.text() {
             Ok(t) => t,
-            Err(_) => "Xatolik: response o‘qilmadi".into(),
+            Err(_) => "Error: response is not read".into(),
         }
     }
     
@@ -89,10 +89,10 @@ impl HttpClient {
 
     let res = match req.send() {
         Ok(r) => r,
-        Err(_) => return "Xatolik: GET header failed".into(),
+        Err(_) => return "Error: GET header failed".into(),
     };
 
-    res.text().unwrap_or("Xatolik: o‘qilmadi".into())
+    res.text().unwrap_or("Error: not read".into())
 }
 
 pub fn status(&self, url: String) -> i32 {
@@ -105,7 +105,7 @@ pub fn status(&self, url: String) -> i32 {
 pub fn get_json(&self, url: String) -> String {
     let res = match self.client.get(&url).send() {
         Ok(r) => r,
-        Err(_) => return "Xatolik".into(),
+        Err(_) => return "Error".into(),
     };
 
     match res.json::<serde_json::Value>() {
@@ -121,10 +121,10 @@ pub fn get_with_query(
 ) -> String {
     let res = match self.client.get(&url).query(&params).send() {
         Ok(r) => r,
-        Err(_) => return "Xatolik".into(),
+        Err(_) => return "Error".into(),
     };
 
-    res.text().unwrap_or("Xatolik".into())
+    res.text().unwrap_or("Error".into())
 }
 
     pub fn download(&self, url: String, path: String) -> String {
@@ -135,16 +135,16 @@ pub fn get_with_query(
 
         let bytes = match res.bytes() {
             Ok(b) => b,
-            Err(_) => return "Xatolik: bytes o‘qilmadi".into(),
+            Err(_) => return "Error: bytes are not read".into(),
         };
 
         let mut file = match File::create(&path) {
             Ok(f) => f,
-            Err(_) => return "Xatolik: file yaratilmadi".into(),
+            Err(_) => return "Error: file is not created".into(),
         };
 
         if file.write_all(&bytes).is_err() {
-            return "Xatolik: yozib bo‘lmadi".into();
+            return "Error: could not be written".into();
         }
 
         format!("OK: {}", path)
@@ -167,7 +167,7 @@ pub fn get_with_query(
         Err(_) => return "Upload failed".into(),
     };
 
-    res.text().unwrap_or("Xatolik".into())
+    res.text().unwrap_or("Error".into())
 }
 
 pub fn set_cookies(&self, url: String, cookies: HashMap<String, String>) -> String {
@@ -183,7 +183,7 @@ pub fn set_cookies(&self, url: String, cookies: HashMap<String, String>) -> Stri
         .send()
     {
         Ok(r) => r,
-        Err(_) => return "Xatolik".into(),
+        Err(_) => return "Error".into(),
     };
 
     res.text().unwrap_or("OK".into())
