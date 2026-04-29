@@ -3,9 +3,7 @@ use std::collections::BinaryHeap;
 use std::thread;
 use std::time::Duration;
 use crate::RustEngine;
-// --------------------
-// JOB STRUCT
-// --------------------
+
 #[derive(Clone)]
 pub struct Job {
     pub priority: i32,
