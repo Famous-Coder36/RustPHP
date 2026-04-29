@@ -1,21 +1,38 @@
 #![cfg_attr(windows, feature(abi_vectorcall))]
 use ext_php_rs::prelude::*;
 use ext_php_rs::types::Zval;
-use ext_php_rs::zend::ProcessGlobals;
-use ext_php_rs::zend::SapiGlobals;
-use ext_php_rs::zend::ExecutorGlobals;
 use ext_php_rs::php_output;
 use ext_php_rs::exception::PhpException;
+use ext_php_rs::types::ArrayKey;
 use std::panic;
-use std::fs::{self, File, OpenOptions};
-use std::io::Write;
-use std::path::Path;
-use std::io::Read;
 use serde_json::Value;
 use uuid::Uuid;
 use sha2::{Sha256, Digest};
 use std::process;
+
 //use tokio::time::{sleep, Duration};
+
+mod hash;
+mod password;
+mod token;
+mod jwt;
+mod hmac;
+mod sign;
+mod telegram;
+mod http;
+mod file;
+mod request;
+mod mysql;
+mod rayon;
+mod r#async;
+
+use r#async::{start_workers, push_job};
+use rayon::RayonClass;
+use mysql::DB;
+use request::Request;
+use file::FileEngine;
+use http::HttpClient;
+use telegram::TelegramBot;
 
 #[php_class]
 pub struct RustEngine {
@@ -23,199 +40,78 @@ pub struct RustEngine {
 
  #[php_impl]
 impl RustEngine {
-    
-    pub fn write_file(path: String, content: String) -> bool {
-    match File::create(&path) {
-        Ok(mut file) => file.write_all(content.as_bytes()).is_ok(),
-        Err(_) => false,
+
+pub fn r#loop(callback: ZendCallable) {
+    loop {
+        match callback.try_call(vec![]) {
+            Ok(result) => {
+                if let Some(b) = result.bool() {
+                    if b == false {
+                        break;
+                    }
+                }
+            }
+            Err(_) => break,
+        }
+    }
+}
+		
+pub fn r#for(start: i32, end: i32, callback: ZendCallable) {
+    if start < end {
+        for i in start..=end {
+            match callback.try_call(vec![&Zval::from(i)]) {
+                Ok(result) => {
+                    if let Some(b) = result.bool() {
+                        if b == false {
+                            break;
+                        }
+                    }
+                }
+                Err(_) => break,
+            }
+        }
+    } else if start > end {
+        let mut i = start;
+        while i > end {
+            match callback.try_call(vec![&Zval::from(i)]) {
+                Ok(result) => {
+                    if let Some(b) = result.bool() {
+                        if b == false {
+                            break;
+                        }
+                    }
+                }
+                Err(_) => break,
+            }
+            i -= 1;
+        }
+    } else {
+        let _ = callback.try_call(vec![&Zval::from(start)]);
     }
 }
 
-pub fn read_file(path: String) -> String {
-    fs::read_to_string(&path).unwrap_or_default()
-}
+pub fn foreach(arr: &Zval, callback: ZendCallable) {
+    let array = match arr.array() {
+        Some(a) => a,
+        None => return,
+    };
 
-pub fn delete_file(path: String) -> bool {
-    fs::remove_file(&path).is_ok()
-}
+    for (_key, value) in array.iter() {
+        let ret = callback.try_call(vec![<&Zval>::from(value)]);
 
-pub fn append_file(path: String, content: String) -> bool {
-    match OpenOptions::new()
-        .create(true)  
-        .append(true) 
-        .open(&path) 
-    {
-        Ok(mut file) => file.write_all(content.as_bytes()).is_ok(),
-        Err(_) => false,
+        match ret {
+            Ok(r) => {
+                // PHP: return false => break
+                if let Some(stop) = r.bool() {
+                    if stop == false {
+                        break;
+                    }
+                }
+            }
+            Err(_) => break,
+        }
     }
 }
-
-pub fn file_exists(path: &str) -> bool {
-    Path::new(path).exists()
-}
-
-pub fn unlink(path: &str) -> PhpResult<bool> {
-    fs::remove_file(path)
-        .map_err(|e| PhpException::from(format!("unlink error: {}", e)))?;
-    Ok(true)
-}
-
-pub fn copy(from: &str, to: &str) -> PhpResult<bool> {
-    let mut src = File::open(from)
-        .map_err(|e| PhpException::from(format!("copy open error: {}", e)))?;
-
-    let mut data = Vec::new();
-    src.read_to_end(&mut data)
-        .map_err(|e| PhpException::from(format!("copy read error: {}", e)))?;
-
-    let mut dest = File::create(to)
-        .map_err(|e| PhpException::from(format!("copy create error: {}", e)))?;
-
-    dest.write_all(&data)
-        .map_err(|e| PhpException::from(format!("copy write error: {}", e)))?;
-
-    Ok(true)
-}
-
-pub fn rename(old: &str, new: &str) -> PhpResult<bool> {
-    fs::rename(old, new)
-        .map_err(|e| PhpException::from(format!("rename error: {}", e)))?;
-    Ok(true)
-}
-
-pub fn is_file(path: &str) -> bool {
-    Path::new(path).is_file()
-}
-
-pub fn is_dir(path: &str) -> bool {
-    Path::new(path).is_dir()
-}
-
-pub fn mkdir(path: &str) -> PhpResult<bool> {
-    fs::create_dir(path)
-        .map_err(|e| PhpException::from(format!("mkdir error: {}", e)))?;
-    Ok(true)
-}
-
-pub fn rmdir(path: &str) -> PhpResult<bool> {
-    fs::remove_dir(path)
-        .map_err(|e| PhpException::from(format!("rmdir error: {}", e)))?;
-    Ok(true)
-}
-
-pub fn scandir(path: Option<String>) -> PhpResult<Vec<String>> {
-    let mut files = Vec::new();
-    let path = path.unwrap_or_else(|| ".".to_string());
-
-    let entries = fs::read_dir(path)
-        .map_err(|e| PhpException::from(format!("scandir error: {}", e)))?;
-
-    for entry in entries {
-        let entry = entry.map_err(|e| PhpException::from(format!("{}", e)))?;
-        let name = entry.file_name().to_string_lossy().to_string();
-        files.push(name);
-    }
-
-    Ok(files)
-}
-
-pub fn get_param(key: String) -> Option<String> {
-    ProcessGlobals::get()
-        .http_get_vars()
-        .get(key.as_str())
-        .and_then(|zval| zval.string())
-}
-
-pub fn post_param(key: String) -> Option<String> {
-    ProcessGlobals::get()
-        .http_post_vars()
-        .get(key.as_str())
-        .and_then(|zval| zval.string())
-}
-
-pub fn request_param(key: String) -> Option<String> {
-    ProcessGlobals::get()
-        .http_request_vars()?  
-        .get(key.as_str())
-        .and_then(|zval: &Zval| zval.string())
-        .map(|s| s.to_string())
-}
-
-pub fn get_cookie(name: String) -> Option<String> {
-    ProcessGlobals::get()
-        .http_cookie_vars()
-        .get(name.as_str())
-        .and_then(|z| z.string())
-}
-
-pub fn server_var(key: String) -> Option<String> {
-    ProcessGlobals::get()
-        .http_server_vars()?
-        .get(key.as_str())
-        .and_then(|zval| zval.string())                  
-}
-
-pub fn env_param(key: String) -> Option<String> {
-    ProcessGlobals::get()
-        .http_env_vars()
-        .get(key.as_str())
-        .and_then(|zval| zval.string())                  
-}
-
-pub fn file_field(field: String, key: String) -> Option<String> {
-let globals = ProcessGlobals::get();
-    let files = globals.http_files_vars();
-
-    // $_FILES structure: $_FILES['field']['name'], ['tmp_name'], ['size'], etc.
-    files
-        .get(field.as_str())?
-        .array()?
-        .get(key.as_str())
-        .and_then(|zval| zval.string())	
-}
-
-pub fn get_request_info() -> Vec<String> {
-    let globals = SapiGlobals::get();
-    let request_info = globals.request_info();
-
-    let mut info = Vec::new();
-
-    if let Some(method) = request_info.request_method() {
-        info.push(format!("Method: {}", method));
-    }
-    if let Some(uri) = request_info.request_uri() {
-        info.push(format!("URI: {}", uri));
-    }
-    if let Some(query) = request_info.query_string() {
-        info.push(format!("Query: {}", query));
-    }
-    if let Some(content_type) = request_info.content_type() {
-        info.push(format!("Content-Type: {}", content_type));
-    }
-    info.push(format!("Content-Length: {}", request_info.content_length()));
-
-    info
-}
-
-
-pub fn get_constant(name: String) -> Option<String> {
-    let globals = ExecutorGlobals::get();
-    globals
-        .constants()?
-        .get(name.as_str())
-        .and_then(|zval| zval.string())
-}
-
-
-pub fn get_ini(key: String) -> Option<String> {
-    ExecutorGlobals::get()
-        .ini_values()
-        .get(key.as_str())
-        .cloned()
-        .flatten()
-}
-
-
 
 pub fn to_uppercase(text: String) -> String {
     text.to_uppercase()
@@ -245,10 +141,13 @@ pub fn hash_password(password: String) -> String {
 }
 
 
-pub fn println(name: &str) {
-    php_println!("{}", name);
+pub fn println(input: &str) {
+    php_println!("{}", input);
 }
 
+pub fn print(input: &str) {
+    php_print!("{}", input);
+}
 
 pub fn output(input: &str) {
     if std::path::Path::new(input).exists() {
@@ -263,6 +162,33 @@ pub fn explode(delimiter: String, text: String) -> Vec<String> {
     text.split(&delimiter)
         .map(|s| s.to_string())
         .collect()
+}
+
+pub fn mb_stripos(haystack: &str, needle: &str) -> PhpResult<Zval> {
+    let hay = haystack.to_lowercase();
+    let nee = needle.to_lowercase();
+
+    if let Some(pos) = hay.find(&nee) {
+        Ok(Zval::from(pos as i32))
+    } else {
+        Ok(Zval::from(false))
+    }
+}
+
+pub fn str_replace(from: &str, to: &str, subject: &str) -> String {
+    subject.replace(from, to)
+}
+
+pub fn starts_with(haystack: &str, needle: &str) -> bool {
+    haystack.starts_with(needle)
+}
+
+pub fn strpos(haystack: &str, needle: &str) -> PhpResult<Zval> {
+    if let Some(pos) = haystack.find(needle) {
+        Ok(Zval::from(pos as i32)) 
+    } else {
+        Ok(Zval::from(false))
+    }
 }
 
 pub fn panic(msg: &str) {
@@ -286,18 +212,114 @@ pub fn var_dump(val: &Zval) {
     php_println!("{:#?}", val);
 }
 
+pub fn debug(val: &Zval) {
+dump_internal(val, 0);
+}
+
+}
+
+#[php_class]
+pub struct RCrypto;
+
+#[php_impl]
+impl RCrypto {
+
+    pub fn sha256(text: String) -> String {
+    hash::sha256(text)
+}
+
+pub fn blake3(text: String) -> String {
+    hash::blake3_hash(text)
+}
+
+pub fn password_hash(pass: String) -> String {
+    password::hash(pass)
+}
+
+pub fn password_verify(pass: String, hash: String) -> bool {
+    password::verify(pass, hash)
+}
+
+pub fn token() -> String {
+    token::generate_token()
+}
+
+pub fn jwt_encode(user: String, secret: String) -> String {
+    jwt::jwt_encode(user, &secret)
+}
+
+pub fn jwt_decode(token: String, secret: String) -> String {
+    jwt::jwt_decode(token, &secret)
+}
+
+pub fn hmac(data: String, key: String) -> String {
+    hmac::hmac_sign(data, key)
+}
+
+pub fn hmac_verify(data: String, key: String, hash: String) -> bool {
+    hmac::hmac_verify(data, key, hash)
+}
+
+pub fn sign_message(msg: String) -> String {
+    sign::sign_message(msg)
+}
+
+pub fn verify_message(msg: String, data: String) -> bool {
+    sign::verify_message(msg, data)
 }
 
 
-
-#[php_function]
-pub fn str_example(input: String) -> String {
-    format!("Hello {}", input)
 }
 
-#[php_function]
-pub fn test_numbers(a: i32, b: u32, c: f32) -> String {
-    format!("a {} b {} c {}", a, b, c)
+fn dump_internal(val: &Zval, indent: usize) {
+    let pad = " ".repeat(indent);
+
+    if val.is_null() {
+        php_println!("{}NULL", pad);
+    }
+    else if let Some(b) = val.bool() {
+        php_println!("{}bool({})", pad, if b { "true" } else { "false" });
+    }
+    else if let Some(i) = val.long() {
+        php_println!("{}int({})", pad, i);
+    }
+    else if let Some(f) = val.double() {
+        php_println!("{}float({})", pad, f);
+    }
+    else if let Some(s) = val.string() {
+        php_println!("{}string({}) \"{}\"", pad, s.len(), s);
+    }
+    else if let Some(arr) = val.array() {
+        php_println!("{}array({}) {{", pad, arr.len());
+
+        for (key, value) in arr.iter() {
+            match key {
+    ArrayKey::Long(i) => {
+        php_print!("  [{}] => ", i);
+    }
+
+    ArrayKey::String(s) => {
+        php_print!("  [\"{}\"] => ", s);
+    }
+
+    _ => {
+        php_print!("  [unknown] => ");
+    }
+}
+
+            dump_internal(value, indent + 4);
+        }
+
+        php_println!("{}}}", pad);
+    }  else if val.is_object() {
+        php_println!("{}object(...) {{", pad);
+        php_println!("{}  [object dump not fully implemented]", pad);
+        php_println!("{}}}", pad);
+    }  else if val.is_resource() {
+        php_println!("{}resource({:?})", pad, val.resource());
+    } else {
+        php_println!("{}unknown type", pad);
+    }
 }
 
 #[php_function]
@@ -314,16 +336,25 @@ pub fn forexm(n: i32) {
 }
 
 
-
-
-
+#[php_function]
+pub fn dispatch_job(func: String, data: String, priority: i32) {
+    push_job(func, data, priority);
+   // "queued".to_string()
+}
 
 #[php_module]
 pub fn get_module(module: ModuleBuilder) -> ModuleBuilder {
+	start_workers(6);
     module
         .function(wrap_function!(hello_world))
-        .function(wrap_function!(test_numbers))
-        .function(wrap_function!(str_example))
         .function(wrap_function!(forexm))
+        .function(wrap_function!(dispatch_job))
         .class::<RustEngine>()
+        .class::<RCrypto>()
+        .class::<TelegramBot>()
+        .class::<HttpClient>()
+        .class::<FileEngine>()
+        .class::<Request>()
+        .class::<DB>()
+        .class::<RayonClass>()
 }
