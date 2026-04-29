@@ -13,9 +13,7 @@ pub struct Job {
     pub data: String,
 }
 
-// --------------------
-// PRIORITY ORDER (MAX HEAP)
-// --------------------
+
 use std::cmp::Ordering;
 
 impl Ord for Job {
@@ -37,19 +35,14 @@ impl PartialEq for Job {
 }
 
 impl Eq for Job {}
-
-// --------------------
-// GLOBAL QUEUE
-// --------------------
+
 static QUEUE: OnceLock<Mutex<BinaryHeap<Job>>> = OnceLock::new();
 
 fn queue() -> &'static Mutex<BinaryHeap<Job>> {
     QUEUE.get_or_init(|| Mutex::new(BinaryHeap::new()))
 }
+
 
-// --------------------
-// RUST FUNCTIONS (YOUR ENGINE LOGIC)
-// --------------------
 
 fn execute(job: Job) {
     match job.func.as_str() {
@@ -77,9 +70,7 @@ pub fn start_workers(size: usize) {
     }
 }
 
-// --------------------
-// PUSH JOB
-// --------------------
+
 pub fn push_job(func: String, data: String, priority: i32) {
     let mut q = queue().lock().unwrap();
 
