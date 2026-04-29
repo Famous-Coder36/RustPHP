@@ -1,5 +1,5 @@
 # RustPHP
-Rust engine for php
+Rust engine for php (extension)
 
 ## Requirements
 • PHP 8.2+
