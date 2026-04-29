@@ -24,11 +24,11 @@
   },
 "scripts": {
     "install-rust": [
-      "command -v cargo >/dev/null 2>&1 || (echo '📦 Rust topilmadi, o‘rnatilmoqda...' && pkg install rust -y || curl https://sh.rustup.rs -sSf | sh -s -- -y)"
+      "command -v cargo >/dev/null 2>&1 || (echo '📦 Rust is not found, is installing...' && pkg install rust -y || curl https://sh.rustup.rs -sSf | sh -s -- -y)"
     ],
 
     "check-rust": [
-      "command -v cargo >/dev/null 2>&1 || (echo '❌ Rust o‘rnatilmadi!' && exit 1)"
+      "command -v cargo >/dev/null 2>&1 || (echo '❌ Rust is not installed!' && exit 1)"
     ],
 
     "build-ext": [
